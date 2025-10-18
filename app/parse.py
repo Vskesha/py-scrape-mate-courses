@@ -44,14 +44,22 @@ def fetch_page(page_url: str) -> bytes | None:
 
 
 def parse_single_module(module_element: Tag) -> Module:
-    name = module_element.select_one("p.CourseModulesList_topicName__7vxtk").get_text()
+    name = module_element.select_one(
+        "p.CourseModulesList_topicName__7vxtk"
+    ).get_text()
+
     topics = []
-    topic_list = module_element.select_one("ul.CourseModulesList_topicsList__NJTKz")
+    topic_list = module_element.select_one(
+        "ul.CourseModulesList_topicsList__NJTKz"
+    )
     if topic_list:
         topics = [
             topic_element.get_text(strip=True)
-            for topic_element in topic_list.select("li.CourseModulesList_topicItem__8wNTG")
+            for topic_element in topic_list.select(
+                "li.CourseModulesList_topicItem__8wNTG"
+            )
         ]
+
     return Module(name=name, topics=topics)
 
 
@@ -70,9 +78,15 @@ def parse_course_modules(page: bytes) -> list[Module]:
 
 
 def parse_single_course(element: Tag) -> Course:
-    name = element.select_one("h3.ProfessionCard_title__m7uno").get_text(strip=True)
-    short_description = element.select_one("p.ProfessionCard_description__K8weo").get_text(strip=True)
-    duration = element.select_one("p.ProfessionCard_duration__13PwX").get_text(strip=True)
+    name = element.select_one(
+        "h3.ProfessionCard_title__m7uno"
+    ).get_text(strip=True)
+    short_description = element.select_one(
+        "p.ProfessionCard_description__K8weo"
+    ).get_text(strip=True)
+    duration = element.select_one(
+        "p.ProfessionCard_duration__13PwX"
+    ).get_text(strip=True)
     course_info_page = element.get("href")
 
     modules = []
@@ -109,7 +123,7 @@ def get_all_courses() -> list[Course]:
     return courses
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     for course in get_all_courses():
         print(course.name)
         print(f"    description: {course.short_description}")
