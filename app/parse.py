@@ -81,14 +81,14 @@ def parse_course_modules(page: bytes) -> list[Module]:
     return modules
 
 
-def parse_single_course(element: Tag) -> Course:
-    element = element.select_one("h3.ProfessionCard_title__m7uno")
+def parse_single_course(course_element: Tag) -> Course:
+    element = course_element.select_one("h3.ProfessionCard_title__m7uno")
     name = element.get_text(strip=True) if element else ""
 
-    element = element.select_one("p.ProfessionCard_description__K8weo")
+    element = course_element.select_one("p.ProfessionCard_description__K8weo")
     short_description = element.get_text(strip=True) if element else ""
 
-    element = element.select_one("p.ProfessionCard_duration__13PwX")
+    element = course_element.select_one("p.ProfessionCard_duration__13PwX")
     duration = element.get_text(strip=True) if element else ""
 
     course_info_page = element.get("href")
