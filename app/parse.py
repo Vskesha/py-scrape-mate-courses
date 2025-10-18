@@ -44,9 +44,8 @@ def fetch_page(page_url: str) -> bytes | None:
 
 
 def parse_single_module(module_element: Tag) -> Module:
-    name = module_element.select_one(
-        "p.CourseModulesList_topicName__7vxtk"
-    ).get_text()
+    element = module_element.select_one("p.CourseModulesList_topicName__7vxtk")
+    name = element.get_text() if element else ""
 
     topics = []
     topic_list = module_element.select_one(
@@ -58,12 +57,16 @@ def parse_single_module(module_element: Tag) -> Module:
             for topic_element in topic_list.select(
                 "li.CourseModulesList_topicItem__8wNTG"
             )
+            if topic_element
         ]
 
     return Module(name=name, topics=topics)
 
 
 def parse_course_modules(page: bytes) -> list[Module]:
+    if not page:
+        return []
+
     soup = BeautifulSoup(page, "html.parser")
 
     module_list = soup.select_one("ul.CourseModulesList_modulesList__C86yL")
@@ -73,26 +76,27 @@ def parse_course_modules(page: bytes) -> list[Module]:
     modules = [
         parse_single_module(element)
         for element in module_list.select("li.color-dark-blue")
+        if element
     ]
     return modules
 
 
 def parse_single_course(element: Tag) -> Course:
-    name = element.select_one(
-        "h3.ProfessionCard_title__m7uno"
-    ).get_text(strip=True)
-    short_description = element.select_one(
-        "p.ProfessionCard_description__K8weo"
-    ).get_text(strip=True)
-    duration = element.select_one(
-        "p.ProfessionCard_duration__13PwX"
-    ).get_text(strip=True)
+    element = element.select_one("h3.ProfessionCard_title__m7uno")
+    name = element.get_text(strip=True) if element else ""
+
+    element = element.select_one("p.ProfessionCard_description__K8weo")
+    short_description = element.get_text(strip=True) if element else ""
+
+    element = element.select_one("p.ProfessionCard_duration__13PwX")
+    duration = element.get_text(strip=True) if element else ""
+
     course_info_page = element.get("href")
 
     modules = []
     if course_info_page:
-        couse_info_link = urljoin(URL, course_info_page)
-        page = fetch_page(couse_info_link)
+        course_info_link = urljoin(URL, course_info_page)
+        page = fetch_page(course_info_link)
         modules = parse_course_modules(page)
 
     return Course(
@@ -103,11 +107,13 @@ def parse_single_course(element: Tag) -> Course:
     )
 
 
-def parse_page(page: bytes) -> list[Course]:
-    result = []
+def parse_page(page: bytes | None) -> list[Course]:
+    if not page:
+        return []
 
     soup = BeautifulSoup(page, "html.parser")
 
+    result = []
     for element in soup.select("a.ProfessionCard_cardWrapper__BCg0O"):
         result.append(parse_single_course(element))
 
@@ -115,12 +121,11 @@ def parse_page(page: bytes) -> list[Course]:
 
 
 def get_all_courses() -> list[Course]:
-    courses: list[Course] = []
-
     page = fetch_page(URL)
-    courses.extend(parse_page(page))
+    if not page:
+        return []
 
-    return courses
+    return parse_page(page)
 
 
 if __name__ == "__main__":
